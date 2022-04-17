@@ -1,3 +1,5 @@
 install\*.exe
 .idea
 *.iml
+Publish.ps1
+./Publishing
