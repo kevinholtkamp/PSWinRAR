@@ -1,5 +1,5 @@
 function Compress-WinRAR(){
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     param(
     [Parameter(Position = 0, Mandatory = $true)]
     [String] $DirectoryToCompress,
@@ -80,19 +80,18 @@ function Compress-WinRAR(){
     $Switches = "$Switches -mt$Threads"
     Write-Verbose "Setting parameter -mt$Threads with value from parameter Threads"
 
-    Write-Verbose "Calling WinRAR via command line: \
-Start-Process -FilePath $(Get-WinRARPath -ErrorAction "Stop")\Rar.exe -ArgumentList a -ep $Switches $ArchivePath $DirectoryToCompress"
+    Write-Verbose "Calling WinRAR via command line: Start-Process -FilePath $(Get-WinRARPath -ErrorAction "Stop")\Rar.exe -ArgumentList a -ep $Switches $ArchivePath $DirectoryToCompress"
     Start-Process -FilePath "$(Get-WinRARPath -ErrorAction "Stop")\Rar.exe" -ArgumentList "a -ep $Switches $ArchivePath $DirectoryToCompress"
 }
 
 function Expand-WinRAR(){
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     param(
     [Parameter(Position = 0, Mandatory = $true)]
-    [String] $TargetDirectory,
+    [String] $ArchivePath,
 
     [Parameter(Position = 1, Mandatory = $true)]
-    [String] $ArchivePath,
+    [String] $TargetDirectory,
 
     [String] $Password,
     [Switch] $Confirm
@@ -107,13 +106,12 @@ function Expand-WinRAR(){
         Write-Verbose "Setting parameter -y since switch Confirm is set"
     }
 
-    Write-Verbose "Calling WinRAR via command line: \
-Start-Process -FilePath $(Get-WinRARPath -ErrorAction "Stop")\UnRAR.exe -ArgumentList x $Switches $ArchivePath $TargetDirectory"
+    Write-Verbose "Calling WinRAR via command line: Start-Process -FilePath $(Get-WinRARPath -ErrorAction "Stop")\UnRAR.exe -ArgumentList x $Switches $ArchivePath $TargetDirectory"
     Start-Process -FilePath "$(Get-WinRARPath -ErrorAction "Stop")\UnRAR.exe" -ArgumentList "x $Switches $ArchivePath $TargetDirectory"
 }
 
 function Test-WinRAR(){
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     param(
     [Parameter(Position = 0, Mandatory = $true)]
     [String] $ArchivePath,
@@ -130,7 +128,7 @@ function Test-WinRAR(){
 }
 
 function Check-WinRAR(){
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     param(
     [Parameter(Position = 0, Mandatory = $true)]
     [String] $ArchivePath,
@@ -143,13 +141,12 @@ function Check-WinRAR(){
         Write-Verbose "Setting parameter -p$Password since parameter Password is set"
     }
 
-    Write-Verbose "Calling WinRAR via command line: \
-Start-Process -FilePath $(Get-WinRARPath -ErrorAction "Stop")\Rar.exe -ArgumentList t $Switches $ArchivePath -PassThru -Wait"
+    Write-Verbose "Calling WinRAR via command line: Start-Process -FilePath $(Get-WinRARPath -ErrorAction "Stop")\Rar.exe -ArgumentList t $Switches $ArchivePath -PassThru -Wait"
     return (Start-Process -FilePath "$(Get-WinRARPath -ErrorAction "Stop")\Rar.exe" -ArgumentList "t $Switches $ArchivePath" -PassThru -Wait).ExitCode
 }
 
 function Get-WinRARPath(){
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     param()
 
     if(Test-Path "C:\Program Files\WinRAR\"){
