@@ -111,29 +111,36 @@ function Expand-WinRAR(){
 }
 
 function Test-WinRAR(){
+    <#
+    .SYNOPSIS
+        Test a .rar archive for validity
+    .DESCRIPTION
+        Test a .rar archive for validity
+    .PARAMETER ArchivePath
+        Path to .rar file which will be tested
+    .PARAMETER Password
+        Password for the .rar file
+    .PARAMETER GetReturnCode
+        Pass through the return code from the winrar command line tool instead of $true/$false
+    .INPUTS
+        Pipeline inputs get used as ArchivePath
+    .OUTPUTS
+        Returns $true if the archive is valid, $false if the archive is invalid
+        If the parameter -GetReturnCode is set, the returncode from the winrar command line tool will be passed through instead
+    .EXAMPLE
+        Test-WinRAR ./Archive.rar -GetReturnCode
+    #>
     [CmdletBinding(SupportsShouldProcess)]
     param(
-    [Parameter(Position = 0, Mandatory = $true)]
-    [String] $ArchivePath,
+        [Parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true, HelpMessage = "Path to .rar file which will be tested")]
+        [Alias("Archive", "Path")]
+        [String] $ArchivePath,
 
-    [String] $Password
-    )
+        [Parameter(Position = 1, HelpMessage = "Password to .rar file")]
+        [String] $Password,
 
-    if((Check-WinRAR -ArchivePath $ArchivePath -Password $Password) -eq 0){
-        return $True
-    }
-    else{
-        return $False
-    }
-}
-
-function Check-WinRAR(){
-    [CmdletBinding(SupportsShouldProcess)]
-    param(
-    [Parameter(Position = 0, Mandatory = $true)]
-    [String] $ArchivePath,
-
-    [String] $Password
+        [Parameter(HelpMessage = "Return the returncode from the winrar executable instead of true/false")]
+        [Switch] $GetReturnCode
     )
 
     if($Password){
@@ -142,7 +149,71 @@ function Check-WinRAR(){
     }
 
     Write-Verbose "Calling WinRAR via command line: Start-Process -FilePath $(Get-WinRARPath -ErrorAction "Stop")\Rar.exe -ArgumentList t $Switches $ArchivePath -PassThru -Wait"
-    return (Start-Process -FilePath "$(Get-WinRARPath -ErrorAction "Stop")\Rar.exe" -ArgumentList "t $Switches $ArchivePath" -PassThru -Wait).ExitCode
+    $ReturnCode = (Start-Process -FilePath "$(Get-WinRARPath -ErrorAction "Stop")\Rar.exe" -ArgumentList "t $Switches $ArchivePath" -PassThru -Wait).ExitCode
+    if($GetReturnCode){
+        return $ReturnCode
+    }
+    else{
+        if($ReturnCode -eq 0){
+            return $true
+        }
+        else{
+            return $false
+        }
+    }
+}
+
+function Repair-WinRAR(){
+    <#
+    .SYNOPSIS
+        Repair a .rar archive
+    .DESCRIPTION
+        Repair a .rar archive
+    .PARAMETER ArchivePath
+        Path to .rar file which will be repaired
+    .PARAMETER Password
+        Password for the .rar file
+    .PARAMETER GetReturnCode
+        Pass through the return code from the winrar command line tool instead of $true/$false
+    .INPUTS
+        Pipeline inputs get used as ArchivePath
+    .OUTPUTS
+        Returns $true if the archive was repaired successfully, $false if the archive was not repaired
+        If the parameter -GetReturnCode is set, the returncode from the winrar command line tool will be passed through instead
+    .EXAMPLE
+        Test-WinRAR ./Archive.rar -GetReturnCode
+    #>
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [Parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true, HelpMessage = "Path to .rar file which will be tested")]
+        [Alias("Archive", "Path")]
+        [String] $ArchivePath,
+
+        [Parameter(Position = 1, HelpMessage = "Password to .rar file")]
+        [String] $Password,
+
+        [Parameter(HelpMessage = "Return the returncode from the winrar executable instead of true/false")]
+        [Switch] $GetReturnCode
+    )
+
+    if($Password){
+        $Switches = "$Switches -p$Password"
+        Write-Verbose "Setting parameter -p$Password since parameter Password is set"
+    }
+
+    Write-Verbose "Calling WinRAR via command line: Start-Process -FilePath $(Get-WinRARPath -ErrorAction "Stop")\Rar.exe -ArgumentList r $Switches $ArchivePath -PassThru -Wait"
+    $ReturnCode = (Start-Process -FilePath "$(Get-WinRARPath -ErrorAction "Stop")\Rar.exe" -ArgumentList "r $Switches $ArchivePath" -PassThru -Wait).ExitCode
+    if($GetReturnCode){
+        return $ReturnCode
+    }
+    else{
+        if($ReturnCode -eq 0){
+            return $true
+        }
+        else{
+            return $false
+        }
+    }
 }
 
 function Get-WinRARPath(){

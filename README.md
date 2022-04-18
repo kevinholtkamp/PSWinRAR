@@ -9,5 +9,5 @@ PSWinRAR can be easily installed by using `Install-Module -Name PSWinRAR` inside
 ## Functions
 - `Compress-WinRAR` is used to compress the contents of the directory specified in `-DirectoryToCompress` into the .rar file specified in `-ArchivePath`
 - `Expand-WinRAR` is used to decompress the contents of the .rar file specified in `-ArchivePath` into the directory specified in `-TargetDirectory`
-- `Check-WinRAR` is used to check the contents of the .rar file specified in `-ArchivePath` and returns the exit code returned by the WinRAR command line tool
-- `Test-WinRAR` is a wrapper for `Check-WinRAR` which returns `$true` if `Check-WinRAR` returns `0`, and returns `$false` otherwise
+- `Test-WinRAR` is a wrapper for `Check-WinRAR` which returns `$true` if `Check-WinRAR` returns `0`, and returns `$false` otherwise. If the Switch-Parameter `-GetReturnCode` is set, the returncode from the winrar executable is returned instead
+- `Repair-WinRAR` is used to check an archive for errors and correct them which returns `$true` if the WinRAR executable returns `0`, and returns `$false` otherwise. If the Switch-Parameter `-GetReturnCode` is set, the returncode from the winrar executable is returned instead
