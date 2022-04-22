@@ -195,7 +195,7 @@ function Expand-WinRAR(){
     .PARAMETER ArchivePath
         Path to .rar file which will be expanded ("Decompressed")
     .PARAMETER TargetDirectory
-        Directory into which the contents of the file specified in ArchivePath will be moved
+        Directory into which the contents of the file specified in ArchivePath will be moved. If it does not exist, it will be created
     .PARAMETER Password
         Password for the .rar file
     .INPUTS
@@ -219,6 +219,10 @@ function Expand-WinRAR(){
     [Parameter(Position = 2, HelpMessage = "Password to the .rar file")]
     [String] $Password
     )
+
+    if(!(Test-Path $TargetDirectory)){
+        New-Item $TargetDirectory -ItemType Directory -Force
+    }
 
     if($Password){
         $Switches = "$Switches -p$Password"
