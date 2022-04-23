@@ -79,15 +79,15 @@ function Compress-WinRAR(){
 
     [Parameter(Position = 5)]
     [ValidateScript({$_ -gt 0 -and $_ -le $Env:NUMBER_OF_PROCESSORS})]
-    [Byte] $Threads = 4,
+    [Int16] $Threads = 1,
 
     [Parameter(Position = 6)]
     [ValidateSet("Relative", "Full", "Flat", "DriveLetter")]
     [String] $ArchiveFileStructure = "Relative",
 
     [Parameter(Position = 7)]
-    [ValidateRange(0, 99)]
-    [Byte] $RecoveryPercentage,
+    [ValidateRange(0, 1000)]
+    [Int16] $RecoveryPercentage,
 
     [String] $Password,
     [String] $ErrorLogFile,
