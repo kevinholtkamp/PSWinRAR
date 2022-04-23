@@ -103,6 +103,10 @@ function Compress-WinRAR(){
     [Switch] $UseRAR4
     )
 
+    if(!$ArchivePath){
+        $ArchivePath = $DirectoryToCompress.TrimEnd("\")
+    }
+
     if(!$NoRecurse){
         $Switches = "$Switches -r"
         Write-Verbose "Setting parameter -r since switch Recursive is set"
