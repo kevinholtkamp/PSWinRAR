@@ -338,7 +338,9 @@ function Repair-WinRAR(){
     }
 
     Write-Verbose "Calling WinRAR via command line: Start-Process -FilePath $(Get-WinRARPath -ErrorAction "Stop")\Rar.exe -ArgumentList r $Switches $ArchivePath -PassThru -Wait"
+    Push-Location (Split-Path $ArchivePath)
     $ReturnCode = (Start-Process -FilePath "$(Get-WinRARPath -ErrorAction "Stop")\Rar.exe" -ArgumentList "r $Switches $ArchivePath" -PassThru -Wait).ExitCode
+    Pop-Location
     if($GetReturnCode){
         return $ReturnCode
     }
