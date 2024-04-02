@@ -22,12 +22,12 @@ Describe "Main functions"{
             "$TestFolder\Archive.rar" | Should -Exist
         }
         It "Testing archive"{
-            Test-WinRAR -ArchivePath "$TestFolder\Archive.rar" -GetReturnCode | Should -Be 0
+            Test-WinRAR -ArchivePath "$TestFolder\Archive.rar" -ExitCode | Should -Be 0
             Test-WinRAR -ArchivePath "$TestFolder\Archive.rar" | Should -Be $true
         }
         It "Expanding archive"{
-            Expand-WinRAR -ArchivePath "$TestFolder\Archive.rar" -TargetDirectory "$TestFolder\TargetDirectory\"
-            "$TestFolder\TargetDirectory\FolderToCompress\InnerFolder\InnerFile.txt" | Should -Exist
+            Expand-WinRAR -ArchivePath "$TestFolder\Archive.rar" -TargetDirectory "$TestFolder\TargetDirectory\" | Should -Be 0 -ErrorAction "Stop"
+            "$TestFolder\TargetDirectory\FolderToCompress\InnerFolder\InnerFile.txt" | Should -Exist -ErrorAction "Stop"
             "$TestFolder\TargetDirectory\FolderToCompress\InnerFolder\InnerFile.txt" | Should -FileContentMatch "Content of test File"
         }
     }
@@ -51,27 +51,27 @@ Describe "Main functions"{
         ){
             "$TestFolder\RecoveryArchive.rar" | Should -Exist
             Set-Content -Path "$TestFolder\RecoveryArchive.rar" -NoNewLine -Value (Get-Content "$TestFolder\RecoveryArchive.rar" -Raw).Remove(101,$Bytes)
-            Repair-WinRAR -ArchivePath "$TestFolder\RecoveryArchive.rar" -GetReturnCode | Should -Be 3
+            Repair-WinRAR -ArchivePath "$TestFolder\RecoveryArchive.rar" -ExitCode | Should -Be 3
             "$TestFolder\fixed.RecoveryArchive.rar" | Should -Exist
             "$TestFolder\rebuilt.RecoveryArchive.rar" | Should -Not -Exist
         }
         It "Repair-WinRAR with too little recovery data: <Recovery>% recovery data and removing <Bytes> byte" -ForEach @(
             @{Recovery = 1; Bytes = 200}
-            @{Recovery = 100; Bytes = 300}
+            @{Recovery = 1; Bytes = 300}
         ){
             Set-Content -Path "$TestFolder\RecoveryArchive.rar" -NoNewLine -Value (Get-Content "$TestFolder\RecoveryArchive.rar" -Raw).Remove(101,$Bytes)
-            Repair-WinRAR -ArchivePath "$TestFolder\RecoveryArchive.rar" -GetReturnCode | Should -BeIn @(0,3)
-            "$TestFolder\rebuilt.RecoveryArchive.rar" | Should -Exist
+            Repair-WinRAR -ArchivePath "$TestFolder\RecoveryArchive.rar" -ExitCode | Should -BeIn @(0,3)
             "$TestFolder\fixed.RecoveryArchive.rar" | Should -Not -Exist
+            "$TestFolder\rebuilt.RecoveryArchive.rar" | Should  -Exist
         }
         It "Repair-WinRAR without recovery data: <Recovery>% recovery data and removing <Bytes> byte" -ForEach @(
             @{Recovery = 0; Bytes = 20}
             @{Recovery = 0; Bytes = 1}
         ){
             Set-Content -Path "$TestFolder\RecoveryArchive.rar" -NoNewLine -Value (Get-Content "$TestFolder\RecoveryArchive.rar" -Raw).Remove(101,$Bytes)
-            Repair-WinRAR -ArchivePath "$TestFolder\RecoveryArchive.rar" -GetReturnCode | Should -BeIn @(0,3)
-            "$TestFolder\rebuilt.RecoveryArchive.rar" | Should -Exist
+            Repair-WinRAR -ArchivePath "$TestFolder\RecoveryArchive.rar" -ExitCode | Should -BeIn @(0,3)
             "$TestFolder\fixed.RecoveryArchive.rar" | Should -Not -Exist
+            "$TestFolder\rebuilt.RecoveryArchive.rar" | Should -Exist
         }
     }
     Context "Compress-WinRAR with out-of-spec parameters"{
@@ -79,7 +79,11 @@ Describe "Main functions"{
             $Splat = @{
                 DirectoryToCompress = "$TestFolder\FolderToCompress"
                 ArchivePath = "$TestFolder\Archive.rar"
+                PassThru = $true
             }
+        }
+        AfterEach{
+            Remove-Item "$TestFolder\Archive.rar" -Force -ErrorAction "SilentlyContinue"
         }
         AfterAll{
             Remove-Item "$TestFolder\Archive.rar" -ErrorAction "silentlycontinue"
@@ -88,7 +92,7 @@ Describe "Main functions"{
             {Compress-WinRAR @Splat -CompressionLevel 6} | Should -Throw
             {Compress-WinRAR @Splat -CompressionLevel -5} | Should -Throw
             {Compress-WinRAR @Splat -DictionarySize 0} | Should -Throw
-            {Compress-WinRAR @Splat -DictionarySize 2000} | Should -Throw
+            {Compress-WinRAR @Splat -DictionarySize -128} | Should -Throw
             {Compress-WinRAR @Splat -DictionarySizeUnit "t"} | Should -Throw
             {Compress-WinRAR @Splat -Threads 0} | Should -Throw
             {Compress-WinRAR @Splat -Threads ($env:NUMBER_OF_PROCESSORS * 2)} | Should -Throw
@@ -101,18 +105,22 @@ Describe "Main functions"{
         }
     }
     Context "Main functions with missing files"{
+        BeforeAll{
+            Remove-Item "$TestFolder\*" -Force -ErrorAction "SilentlyContinue"
+        }
         It "Compressing non-existing folder"{
             {Compress-WinRAR -DirectoryToCompress "$TestFolder\NonExistingFolder" -ArchivePath "$TestFolder\Archive.rar"} | Should -Throw "Winrar stopped with exit code 10"
             "$TestFolder\Archive.rar" | Should -Not -Exist
         }
         It "Expanding non-existing archive"{
+            Remove-Item "$TestFolder\TargetDirectory\*" -Recurse -Force -ErrorAction "SilentlyContinue"
             {Expand-WinRAR -ArchivePath "$TestFolder\Archive.rar" -TargetDirectory "$TestFolder\TargetDirectory"} | Should -Throw "Winrar stopped with exit code 10"
         }
         It "Testing non-existing archive"{
-            Test-WinRAR -ArchivePath "$TestFolder\Archive.rar" -GetReturnCode | Should -Be 10
+            Test-WinRAR -ArchivePath "$TestFolder\Archive.rar" -ExitCode | Should -Be 10
         }
         It "Repairing non-existing winrar"{
-            Repair-WinRAR -ArchivePath "$TestFolder\Archive.rar" -GetReturnCode | Should -Be 10
+            Repair-WinRAR -ArchivePath "$TestFolder\Archive.rar" -ExitCode | Should -Be 10
         }
     }
 }
